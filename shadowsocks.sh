@@ -1,10 +1,11 @@
 #!/bin/bash
-[[ ! -d /usr/local/lib/rm ]] && exit
+#25/01/2021
+clear
+clear
 declare -A cor=( [0]="\033[1;37m" [1]="\033[1;34m" [2]="\033[1;31m" [3]="\033[1;33m" [4]="\033[1;32m" )
-dir="/etc/VPS-MX"
-SCPfrm="${dir}/herramientas" && [[ ! -d ${SCPfrm} ]] && exit
-SCPinst="${dir}/protocolos" && [[ ! -d ${SCPinst} ]] && exit
-[[ ! -d /usr/local/megat ]] && exit
+SCPdir="/etc/VPS-MX"
+SCPfrm="${SCPdir}/herramientas" && [[ ! -d ${SCPfrm} ]] && exit
+SCPinst="${SCPdir}/protocolos"&& [[ ! -d ${SCPinst} ]] && exit
 mportas () {
 unset portas
 portas_var=$(lsof -V -i tcp -P -n | grep -v "ESTABLISHED" |grep -v "COMMAND" | grep "LISTEN")
@@ -20,9 +21,6 @@ MEU_IP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9
 MEU_IP2=$(wget -qO- ipv4.icanhazip.com)
 [[ "$MEU_IP" != "$MEU_IP2" ]] && IP="$MEU_IP2" || IP="$MEU_IP"
 }
-
-config="/etc/shadowsocks-libev/config.json"
-
 fun_eth () {
 eth=$(ifconfig | grep -v inet6 | grep -v lo | grep -v 127.0.0.1 | grep "encap:Ethernet" | awk '{print $1}')
     [[ $eth != "" ]] && {
@@ -66,87 +64,76 @@ done
 echo -e " \033[1;33m[\033[1;31m####################\033[1;33m] - \033[1;32m100%\033[0m"
 sleep 1s
 }
-del_shadowsocks () {
-[[ -e /etc/shadowsocks-libev/config.json ]] && {
-[[ $(ps ax|grep ss-server|grep -v grep|awk '{print $1}') != "" ]] && kill -9 $(ps ax|grep ss-server|grep -v grep|awk '{print $1}') > /dev/null 2>&1 && ss-server -c /etc/shadowsocks-libev/config.json -d stop > /dev/null 2>&1
-echo -e "\033[1;33m	SHADOWSOCKS LIBEV DETENIDO"
+fun_shadowsocks () {
+[[ -e /etc/shadowsocks.json ]] && {
+[[ $(ps x|grep ssserver|grep -v grep|awk '{print $1}') != "" ]] && kill -9 $(ps x|grep ssserver|grep -v grep|awk '{print $1}') > /dev/null 2>&1 && ssserver -c /etc/shadowsocks.json -d stop > /dev/null 2>&1
+echo -e "\033[1;33m $(fun_trans ${id} "SHADOWSOCKS PARADO")"
 msg -bar
-rm /etc/shadowsocks-libev/config.json
-rm -rf Instalador-libev.sh Instalador-libev.log shadowsocks_libev_qr.png
-rm -rf Instalador-libev.sh Instalador-libev.log
+rm /etc/shadowsocks.json
 return 0
 }
-}
-
-[[ $(ps ax | grep ss-server | grep -v grep | awk '{print $1}') ]] && ss="\e[92m[ ON ]" || ss="\e[91m[ OFF ]"
-clear
+       while true; do
+	   msg -bar
+	   msg -tit
+	   msg -ama "        INSTALADOR SHADOWSOCKS By @Kalix1"
+	   msg -bar
+       echo -e "\033[1;33m $(fun_trans ${id} "Selecione una Criptografia")"
+	   msg -bar
+       encript=(aes-256-gcm aes-192-gcm aes-128-gcm aes-256-ctr aes-192-ctr aes-128-ctr aes-256-cfb aes-192-cfb aes-128-cfb camellia-128-cfb camellia-192-cfb camellia-256-cfb chacha20-ietf-poly1305 chacha20-ietf chacha20 rc4-md5)
+       for((s=0; s<${#encript[@]}; s++)); do
+       echo -e " [${s}] - ${encript[${s}]}"
+       done
+       msg -bar
+       while true; do
+       unset cript
+       read -p "Escoja una Criptografia: " -e -i 0 cript
+       [[ ${encript[$cript]} ]] && break
+       echo -e "$(fun_trans ${id} "Opcion Invalida")"
+       done
+       encriptacao="${encript[$cript]}"
+       [[ ${encriptacao} != "" ]] && break
+       echo -e "$(fun_trans ${id} "Opcion Invalida")"
+      done
+#ESCOLHENDO LISTEN
 msg -bar
-msg -tit
-echo -e "       \e[91m\e[43mINSTALADOR SHADOWSOCKS-LIBEV+(obfs)\e[0m "
+      echo -e "\033[1;33m $(fun_trans ${id} "Seleccione puerto para el Shadowsocks Escuchar")\033[0m"
+	  msg -bar
+      while true; do
+      unset Lport
+      read -p " Puerto: " Lport
+      [[ $(mportas|grep "$Lport") = "" ]] && break
+      echo -e " ${Lport}: $(fun_trans ${id} "Puerto Invalido")"      
+      done
+#INICIANDO
 msg -bar
-echo -e "$(msg -verd "[1]")$(msg -verm2 "➛ ")$(msg -azu "INSTALAR SHADOWSOCKS LIBEV") $ss"
-echo -e "$(msg -verd "[2]")$(msg -verm2 "➛ ")$(msg -azu "DESINSTALAR SHADOWSOCKS LIBEV")"
-echo -e "$(msg -verd "[3]")$(msg -verm2 "➛ ")$(msg -azu "VER CONFI LIBEV")"
-echo -e "$(msg -verd "[4]")$(msg -verm2 "➛ ")$(msg -azu "MODIFICAR CONFIGURACION (nano)")"
-echo -e "$(msg -verd "[0]")$(msg -verm2 "➛ ")$(msg -azu "VOLVER")"
+echo -e "\033[1;33m $(fun_trans ${id} "Ingrese la contraseña Shadowsocks")\033[0m"
+read -p" Contraseña: " Pass
 msg -bar
-echo -n " Selecione Una Opcion: "
-read opcao
-case $opcao in
-1)
-clear
+echo -e "\033[1;33m $(fun_trans ${id} "Iniciando Instalacion")"
 msg -bar
-wget --no-check-certificate -O Instalador-libev.sh https://raw.githubusercontent.com/lacasitamx/ZETA/master/sha/Instalador-libev.sh > /dev/null 2>&1
-chmod +x Instalador-libev.sh
-./Instalador-libev.sh 2>&1 | tee Instalador-libev.log
-value=$(ps ax |grep ss-server|grep -v grep)
+fun_bar 'sudo apt-get install shadowsocks -y'
+fun_bar 'sudo apt-get install libsodium-dev -y'
+fun_bar 'sudo apt-get install python-pip -y'
+fun_bar 'sudo pip install --upgrade setuptools'
+fun_bar 'pip install --upgrade pip -y'
+fun_bar 'pip install https://github.com/shadowsocks/shadowsocks/archive/master.zip -U'
+echo -ne '{\n"server":"' > /etc/shadowsocks.json
+echo -ne "0.0.0.0" >> /etc/shadowsocks.json
+echo -ne '",\n"server_port":' >> /etc/shadowsocks.json
+echo -ne "${Lport},\n" >> /etc/shadowsocks.json
+echo -ne '"local_port":1080,\n"password":"' >> /etc/shadowsocks.json
+echo -ne "${Pass}" >> /etc/shadowsocks.json
+echo -ne '",\n"timeout":600,\n"method":"' >> /etc/shadowsocks.json
+echo -ne "${encriptacao}" >> /etc/shadowsocks.json
+echo -ne '"\n}' >> /etc/shadowsocks.json
+msg -bar
+echo -e "\033[1;31m INICIANDO\033[0m"
+ssserver -c /etc/shadowsocks.json -d start > /dev/null 2>&1
+value=$(ps x |grep ssserver|grep -v grep)
 [[ $value != "" ]] && value="\033[1;32mINICIADO CON EXITO" || value="\033[1;31mERROR"
 msg -bar
 echo -e "${value}"
 msg -bar
-;;
-2)
-clear
-msg -bar
-echo -e "\033[1;93m  Desinstalar  ..."
-del_shadowsocks
-msg -bar
-wget --no-check-certificate -O Instalador-libev.sh https://raw.githubusercontent.com/lacasitamx/ZETA/master/sha/Instalador-libev.sh > /dev/null 2>&1
-chmod +x Instalador-libev.sh
-./Instalador-libev.sh uninstall
-rm -rf Instalador-libev.sh Instalador-libev.log shadowsocks_libev_qr.png
-
-msg -bar
-sleep 3
-exit
-;;
-3)
-clear
-msg -bar
-msg -ama " VER CONFIGURACION"
-msg -bar
-if [[ ! -e ${config} ]]; then
-msg -verm " NO HAY INFORMACION"
-else
-cat /etc/shadowsocks-libev/confis
-msg -bar
-fi
-;;
-4)
-clear
-msg -bar
-msg -ama " MODIFICAR CONFIGURACION"
-msg -bar
-
-if [[ ! -e ${config} ]]; then
-msg -verm " NO HAY INFORMACION"
-else
-msg -verd " para guardar la confi precione ( crtl + x )"
-read -p " enter para continuar"
-nano ${config}
-msg -bar
-/etc/init.d/shadowsocks-libev restart
-msg -bar
-fi
-;;
-esac
+return 0
+}
+fun_shadowsocks

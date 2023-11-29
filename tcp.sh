@@ -1,7 +1,5 @@
 #!/bin/bash
 clear
-ll="/usr/local/include/snaps" && [[ ! -d ${ll} ]] && exit
-l="/usr/local/lib/sped" && [[ ! -d ${l} ]] && exit
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 
@@ -12,66 +10,66 @@ Info="${Green_font_prefix}[Informacion]${Font_color_suffix}"
 Error="${Red_font_prefix}[Error]${Font_color_suffix}"
 Tip="${Green_font_prefix}[Atencion]${Font_color_suffix}"
 
-remove_all(){
-sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf
-sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf
-echo -e "\e[1;31m ACELERADOR BBR DESINSTALADA\e[0m"
+remove_all() {
+	sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf
+	sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf
+	echo -e "\e[1;31m ACELERADOR BBR DESINSTALADA\e[0m"
 }
 
-startbbr(){
+startbbr() {
 	remove_all
-	echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
-	echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
+	echo "net.core.default_qdisc=fq" >>/etc/sysctl.conf
+	echo "net.ipv4.tcp_congestion_control=bbr" >>/etc/sysctl.conf
 	sysctl -p
 	echo -e "${Info}¡BBR comenzó con éxito!"
 	msg -bar
 }
 
 #Habilitar BBRplus
-startbbrplus(){
+startbbrplus() {
 	remove_all
-	echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
-	echo "net.ipv4.tcp_congestion_control=bbrplus" >> /etc/sysctl.conf
+	echo "net.core.default_qdisc=fq" >>/etc/sysctl.conf
+	echo "net.ipv4.tcp_congestion_control=bbrplus" >>/etc/sysctl.conf
 	sysctl -p
 	echo -e "${Info}BBRplus comenzó con éxito!！"
 	msg -bar
 }
 
 # Menú de inicio
-start_menu(){
-clear
-msg -bar
-msg -tit
-echo -e " TCP Aceleración (BBR/Plus) ${Red_font_prefix}By @lacasitamx${Font_color_suffix}
-$(msg -bar)
- ${Green_font_prefix}[ 1 ]${Font_color_suffix} Acelerar VPS Con BBR ${amarillo}(recomendado)${final}
- ${Green_font_prefix}[ 2 ]${Font_color_suffix} Acelerar VPS Con BBRplus
- ${Green_font_prefix}[ 3 ]${Font_color_suffix} Detener Acelerador VPS
- ${Green_font_prefix}[ 0 ]${Font_color_suffix} Salir del script" && msg -bar
+start_menu() {
+	clear
+	msg -bar
+	msg -tit
+	echo -e " TCP Aceleración (BBR/Plus) ${Red_font_prefix}By @lacasitamx${Font_color_suffix}
+ $(msg -bar)
+  ${Green_font_prefix}[ 1 ]${Font_color_suffix} Acelerar VPS Con BBR ${amarillo}(recomendado)${final}
+  ${Green_font_prefix}[ 2 ]${Font_color_suffix} Acelerar VPS Con BBRplus
+  ${Green_font_prefix}[ 3 ]${Font_color_suffix} Detener Acelerador VPS
+  ${Green_font_prefix}[ 0 ]${Font_color_suffix} Salir del script" && msg -bar
 
-	run_status=`grep "net.ipv4.tcp_congestion_control" /etc/sysctl.conf | awk -F "=" '{print $2}'`
+	run_status=$(grep "net.ipv4.tcp_congestion_control" /etc/sysctl.conf | awk -F "=" '{print $2}')
 	if [[ ${run_status} ]]; then
-	echo -e " Estado actual: ${Green_font_prefix}Instalado\n${Font_color_suffix} ${_font_prefix}BBR Comenzó exitosamente${Font_color_suffix} Kernel Acelerado, ${amarillo}${run_status}${Font_color_suffix}"
+		echo -e " Estado actual: ${Green_font_prefix}Instalado\n${Font_color_suffix} ${_font_prefix}BBR Comenzó exitosamente${Font_color_suffix} Kernel Acelerado, ${amarillo}${run_status}${Font_color_suffix}"
 	else
-	echo -e " Estado actual: ${Green_font_prefix}No instalado\n${Font_color_suffix} Kernel Acelerado: ${Red_font_prefix}Por favor,instale el Acelerador primero.${Font_color_suffix}"
+		echo -e " Estado actual: ${Green_font_prefix}No instalado\n${Font_color_suffix} Kernel Acelerado: ${Red_font_prefix}Por favor,instale el Acelerador primero.${Font_color_suffix}"
 	fi
-msg -bar
-read -p "$(echo -e "\e[31m► ${bla}Selecione Una Opcion [0-3]:${amarillo}") " num
-case "$num" in
+	msg -bar
+	read -p "$(echo -e "\e[31m► ${bla}Selecione Una Opcion [0-3]:${amarillo}") " num
+	case "$num" in
 	0) ;;
 	1) startbbr ;;
 	2) startbbrplus ;;
 	3) remove_all ;;
 	*)
-	clear
-	echo -e "${Error}:Por favor ingrese el número correcto [0-3]"
-	sleep 1s
-	start_menu
-	;;
-esac
+		clear
+		echo -e "${Error}:Por favor ingrese el número correcto [0-3]"
+		sleep 1s
+		start_menu
+		;;
+	esac
 }
 
-check_sys(){
+check_sys() {
 	if [[ -f /etc/redhat-release ]]; then
 		release="centos"
 	elif cat /etc/issue | grep -q -E -i "debian"; then
@@ -86,17 +84,17 @@ check_sys(){
 		release="ubuntu"
 	elif cat /proc/version | grep -q -E -i "centos|red hat|redhat"; then
 		release="centos"
-    fi
+	fi
 }
 
 #Verifique la versión de Linux
-check_version(){
+check_version() {
 	if [[ -s /etc/redhat-release ]]; then
-		version=`grep -oE  "[0-9.]+" /etc/redhat-release | cut -d . -f 1`
+		version=$(grep -oE "[0-9.]+" /etc/redhat-release | cut -d . -f 1)
 	else
-		version=`grep -oE  "[0-9.]+" /etc/issue | cut -d . -f 1`
+		version=$(grep -oE "[0-9.]+" /etc/issue | cut -d . -f 1)
 	fi
-	bit=`uname -m`
+	bit=$(uname -m)
 	if [[ ${bit} = "x86_64" ]]; then
 		bit="x64"
 	else

@@ -1,12 +1,6 @@
 #!/bin/bash
 #19/12/2019
-clear
-clear
 declare -A cor=( [0]="\033[1;37m" [1]="\033[1;34m" [2]="\033[1;31m" [3]="\033[1;33m" [4]="\033[1;32m" )
-SCPdir="/etc/VPS-MX" && [[ ! -d ${SCPdir} ]] && exit 1
-SCPusr="${SCPdir}/controlador" && [[ ! -d ${SCPusr} ]] && mkdir ${SCPusr}
-SCPfrm="${SCPdir}/herramientas" && [[ ! -d ${SCPfrm} ]] && mkdir ${SCPfrm}
-SCPinst="${SCPdir}/protocolos" && [[ ! -d ${SCPfrm} ]] && mkdir ${SCPfrm}
 construct_fun () {
 payload="$1"
 sed -i 's/.crlf]/\\r\\n&/g' ${payload}
@@ -188,9 +182,9 @@ err_fun () {
 echo -e "${cor[5]} Operacion Invalida"
 exit
 }
+clear
 msg -bar
-msg -tit
-echo -e "${cor[3]}               PAYLOAD BRUTE FORCE "
+echo -e "${cor[5]}     Payload Brute Force By Mod MEX"
 msg -bar
 gerar_pay () {
 # Coletando Host
@@ -207,7 +201,7 @@ cat <<EOF
  [5] - DELETE     [6] - HEAD     [7] - PATCH   [8] - POST
 EOF
 msg -bar
-# Coletando Requisição
+# Coletando Requisiï¿½ï¿½o
 while [[ ! ${req} ]]; do
     read -p " => " valor3
     case $valor3 in
